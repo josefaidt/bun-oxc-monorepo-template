@@ -12,28 +12,29 @@ A starting point for TypeScript monorepos on Bun, with oxfmt, type-aware oxlint,
 
 ## Skills
 
-The skills come from [josefaidt/skills](https://github.com/josefaidt/skills), and this repository does not ship copies of them. Install them once per project, then commit what the CLI writes:
+The skills are Claude Code plugins from the `josefaidt-skills` marketplace in [josefaidt/skills](https://github.com/josefaidt/skills), which `.claude/settings.json` declares along with the plugins this repository uses. Settings don't install a plugin, so each person installs them once:
 
 ```sh
-bunx skills add josefaidt/skills --skill writing-typescript --skill new-typescript-package --skill monorepo --skill writing-prose --skill domain-modeling --skill retro -a claude-code -a codex -y
-bunx skills add github/awesome-copilot --skill conventional-commit -a claude-code -a codex -y
-bun run fmt
+claude plugin marketplace add josefaidt/skills
+claude plugin install writing@josefaidt-skills --scope project
+claude plugin install typescript@josefaidt-skills --scope project
+claude plugin install design@josefaidt-skills --scope project
+claude plugin install agents@josefaidt-skills --scope project
 ```
 
-Installed skills live in `.agents/skills/`, symlinked into `.claude/skills/`. Load the matching skill before starting the work it covers.
+Load the matching skill before starting the work it covers.
 
 | Skill | Load when |
 | :-- | :-- |
-| `writing-typescript` | Writing or reviewing any TypeScript |
-| `new-typescript-package` | Adding a workspace package or app |
-| `monorepo` | Deciding where code belongs, or adding or upgrading a dependency |
-| `writing-prose` | Writing any prose, such as a README, an issue, or a pull request body |
-| `domain-modeling` | Naming or renaming a domain concept, or editing `GLOSSARY.md` or an ADR |
-| `conventional-commit` | Writing a commit message |
+| `typescript:writing-typescript` | Writing or reviewing any TypeScript |
+| `typescript:new-typescript-package` | Adding a workspace package or app |
+| `typescript:monorepo` | Deciding where code belongs, or adding or upgrading a dependency |
+| `writing:writing-prose` | Writing any prose, such as a README, an issue, or a pull request body |
+| `design:domain-modeling` | Naming or renaming a domain concept, or editing `GLOSSARY.md` or an ADR |
 
-`retro` runs only when the user invokes it by name, and codifies what a session taught into the files future agents read.
+`agents:retro` runs only when the user invokes it by name, and codifies what a session taught into the files future agents read.
 
-Skills vendored from other repositories are pinned in `skills-lock.json`. Change them upstream and run `bunx skills update` rather than editing the copies here.
+Codex and other agents don't read Claude Code plugins. To use the skills there, copy them in with `bunx skills add josefaidt/skills`, as the skills repository's README describes.
 
 ## Local setup
 
