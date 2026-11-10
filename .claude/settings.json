@@ -80,5 +80,19 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "writing@josefaidt-skills": true,
+    "typescript@josefaidt-skills": true,
+    "design@josefaidt-skills": true,
+    "agents@josefaidt-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "josefaidt-skills": {
+      "source": {
+        "source": "github",
+        "repo": "josefaidt/skills"
+      }
+    }
   }
 }
