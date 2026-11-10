@@ -1,9 +1,12 @@
 name: Setup
-description: Checkout, install Bun, and install dependencies
+description: Install Bun and workspace dependencies
 
 runs:
   using: composite
   steps:
     - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version-file: .bun-version
+    # A cold `bun ci` installs in seconds, faster than restoring a package cache
     - run: bun ci
       shell: bash
