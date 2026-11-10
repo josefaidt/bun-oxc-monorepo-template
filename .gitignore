@@ -1,4 +1,12 @@
 node_modules
+
+# no dotenv files, apart from the examples that list each variable
 .env*
-.claude/**/*.local.json
-.claude/worktrees/
+!.env.example
+
+# no build output
+dist/
+
+# no local Claude Code settings or worktrees
+.claude/settings.local.json
+.claude/worktrees

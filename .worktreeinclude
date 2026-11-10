@@ -1,0 +1,7 @@
+# Gitignored files copied into a worktree when Claude Code first creates it.
+# Gitignore syntax, matched against `git ls-files --others --ignored`.
+#
+# A bare pattern matches at any depth, so this one line covers the root file and every workspace
+# package's. They are copied, not symlinked, and only at creation, so rotating a value in the main
+# checkout leaves existing worktrees on the old copy.
+.env.local

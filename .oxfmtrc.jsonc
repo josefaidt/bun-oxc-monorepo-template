@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "sortImports": {
+    "groups": ["type", "builtin", "external", ["parent", "sibling", "index"]],
+    "newlinesBetween": false
+  },
+  "sortPackageJson": true,
+  // A paragraph stays on one line, so a diff shows the sentence that changed
+  "proseWrap": "never",
+  "overrides": [
+    {
+      "files": ["*.jsonc"],
+      "options": {
+        "trailingComma": "none"
+      }
+    }
+  ],
+  "ignorePatterns": [".claude/worktrees/*", "**/dist/**"]
+}

@@ -1,0 +1,109 @@
+#!/bin/sh
+set -e
+
+[ -n "$CI" ] && exit 0
+
+STAGED=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|cjs|mjs|cts|mts|json|jsonc|yaml|yml|toml|css|scss|less|md|mdx|graphql|vue|svelte|html)$' || true)
+
+[ -z "$STAGED" ] && exit 0
+
+STAGED_LINT=$(echo "$STAGED" | grep -E '\.(ts|tsx|js|jsx|cjs|mjs|cts|mts|vue|svelte|astro)$' || true)
+
+# Check what is staged, not the working tree: move aside each staged file that
+# also has unstaged edits, write its staged copy in its place, and move the
+# working copy back on exit. The backup is removed only once it is empty, so a
+# working copy that cannot be moved back is never lost.
+BACKUP=$(mktemp -d "$(git rev-parse --git-path pre-commit-backup).XXXXXX")
+echo "$STAGED" >"$BACKUP/staged"
+UNSTAGED=$(git -c core.quotePath=false diff --name-only | grep -Fx -f "$BACKUP/staged" || true)
+
+restore() {
+  trap '' INT TERM HUP
+  set +e
+  if [ -f "$BACKUP/created" ]; then
+    while IFS= read -r f; do rm -f "./$f"; done <"$BACKUP/created"
+  fi
+  if [ -f "$BACKUP/created-dirs" ]; then
+    while IFS= read -r d; do rmdir "$d" 2>/dev/null; done <"$BACKUP/created-dirs"
+  fi
+  if [ -f "$BACKUP/saved" ]; then
+    while IFS= read -r f; do rm -f "./$f" && mv "$BACKUP/files/$f" "./$f"; done <"$BACKUP/saved"
+  fi
+  if [ -n "$(find "$BACKUP/files" ! -type d 2>/dev/null)" ]; then
+    echo "pre-commit: could not restore every unstaged change. The working copies are in $BACKUP/files." >&2
+    exit 1
+  else
+    rm -rf "$BACKUP"
+  fi
+}
+trap restore EXIT
+trap 'exit 130' INT TERM HUP
+
+if [ -n "$UNSTAGED" ]; then
+  echo "$UNSTAGED" | while IFS= read -r f; do
+    # A staged symlink or submodule has no text to check.
+    case $(git ls-files -s -- "$f" | cut -d' ' -f1) in
+    100644 | 100755) ;;
+    *) continue ;;
+    esac
+    mkdir -p "$BACKUP/files/$(dirname "./$f")"
+    if [ -e "./$f" ] || [ -L "./$f" ]; then
+      mv "./$f" "$BACKUP/files/$f"
+      echo "$f" >>"$BACKUP/saved"
+    else
+      d=$(dirname "./$f")
+      while [ ! -e "$d" ]; do
+        echo "$d" >>"$BACKUP/created-dirs"
+        d=$(dirname "$d")
+      done
+      mkdir -p "$(dirname "./$f")"
+      echo "$f" >>"$BACKUP/created"
+    fi
+    git show ":$f" >"./$f"
+  done
+fi
+
+FMT_OUTPUT=$(echo "$STAGED" | sed 's|^|./|' | tr '\n' '\0' | xargs -0 bun run fmt:check 2>&1) && FMT_STATUS=0 || FMT_STATUS=$?
+[ -n "$FMT_OUTPUT" ] && printf '%s\n' "$FMT_OUTPUT"
+
+if [ "$FMT_STATUS" -ne 0 ]; then
+  case "$FMT_OUTPUT" in
+  *"Expected at least one target file"*)
+    echo
+    echo "pre-commit: skipping the format check, every staged file is format-ignored."
+    echo
+    ;;
+  *)
+    echo
+    echo "pre-commit: format check failed. Run 'bun run fmt', stage the result, and commit again."
+    exit "$FMT_STATUS"
+    ;;
+  esac
+fi
+
+if [ -n "$STAGED_LINT" ]; then
+  LINT_OUTPUT=$(echo "$STAGED_LINT" | sed 's|^|./|' | tr '\n' '\0' | xargs -0 bun run lint 2>&1) && LINT_STATUS=0 || LINT_STATUS=$?
+  [ -n "$LINT_OUTPUT" ] && printf '%s\n' "$LINT_OUTPUT"
+
+  if [ "$LINT_STATUS" -ne 0 ]; then
+    case "$LINT_OUTPUT" in
+    *"Failed to find tsgolint"*)
+      echo
+      echo "pre-commit: skipping lint, oxlint could not find the tsgolint binary."
+      echo "pre-commit: run 'bun install' to pick up oxlint-tsgolint, then commit again"
+      echo "pre-commit: to lint these files."
+      echo
+      ;;
+    *"No files found to lint"*)
+      echo
+      echo "pre-commit: skipping lint, every staged file is lint-ignored."
+      echo
+      ;;
+    *)
+      echo
+      echo "pre-commit: lint failed. Fix the errors above, or run 'bun run lint:fix', then commit again."
+      exit "$LINT_STATUS"
+      ;;
+    esac
+  fi
+fi

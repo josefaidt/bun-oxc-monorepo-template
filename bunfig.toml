@@ -1,3 +1,10 @@
 [install]
+# Each package can import only what its own package.json declares, so an undeclared import fails
+# where it is written instead of in someone else's CI
 linker = "isolated"
 globalStore = true
+# `bun add` writes the exact version it resolved, and shared ranges live in the root catalog
+exact = true
+# Only install versions published at least three days ago, so a compromised release has time to be
+# caught and pulled before it reaches this lockfile
+minimumReleaseAge = 259200
