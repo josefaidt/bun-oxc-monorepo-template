@@ -10,7 +10,7 @@ bun create josefaidt/bun-oxc-monorepo-template my-project
 
 `bun create` copies the files without this repository's history, renames the root package to the directory name, runs `git init` and `bun install`, and tries a first commit. The `commit-msg` hook rejects that commit's message, so the files stay staged for a first commit of your own, such as `chore: initial commit`.
 
-Then replace the description at the top of this README and under "What this is" in `AGENTS.md`, and install the agent skills `AGENTS.md` lists.
+Then replace the description at the top of this README and under "What this is" in `AGENTS.md`, and install the Claude Code plugins that `.claude/settings.json` declares, with the commands under "Skills" in `AGENTS.md`.
 
 ## Stack
 
@@ -60,10 +60,10 @@ Dependencies that more than one package uses live in the [catalog](https://bun.s
 
 ## Adding a package
 
-With the skills installed, ask Claude Code to add one, or run the `new-typescript-package` skill:
+With the `typescript` plugin installed, ask Claude Code to add one, or run its `new-typescript-package` skill:
 
 ```
-/new-typescript-package <name> [packages|apps]
+/typescript:new-typescript-package <name> [packages|apps]
 ```
 
 By hand, create `packages/<name>/` or `apps/<name>/` with:
